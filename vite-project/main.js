@@ -10,13 +10,12 @@ import Stats from 'three/addons/libs/stats.module.js';
 
 
 let stats;
-let controls, water, sun;
-let boat, sail1, sail2, sail3, sail4, sail5, sailGroup, boom;
+let  water, sun;
+let boat
 // Basic setup
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
-camera.position.z = 400;
-camera.position.y = 200;
+camera.position.x = 4;
 const renderer = new THREE.WebGLRenderer();
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.5;
@@ -31,93 +30,35 @@ document.body.appendChild(renderer.domElement);
 
 //sun
 sun = new THREE.Vector3();
-// let axesHelper = new THREE.AxesHelper(1000);
-let axesHelper1, pivotHelper;
-let pivotPoint = new THREE.Vector3();
+
+// Assuming Y
 // scene.add(axesHelper);
 //boat model
-const loader = new GLTFLoader();
-loader.load(
-    './public/uploads_files_3556593_Clun+D.gltf',
-    function (gltf) {
-        boat = gltf.scene;
-        console.log(boat);
+function loadModel() {
+    const loader = new GLTFLoader();
+    loader.load(
+        './public/scene.gltf',
+        function (gltf) {
+            boat = gltf.scene;
+            console.log(boat);
+            //rotation parts
+            // boat.children[0].children[0].children[0].children[3].children[0]
+            // boat.children[0].children[0].children[0].children[1].children[0]
+            // boat.children[0].children[0].children[0].children[2].children[0]
+            //  boom   boat.children[0].children[0].children[0].children[0].children[0].position.x = 10
+            boat.position.y += 10
+            scene.add(boat);
 
-        boat.children[1].children[4].children[1].children[0].material.side = THREE.DoubleSide
-        // Create a single group for all sail parts
-        sailGroup = new THREE.Group();
-        
-        // Find the boom
-        boom = boat.children[1].children[5];
-        boom.position.x += -10;
-        boom.rotation.y = THREE.MathUtils.degToRad(2);
-        boom.getWorldPosition(pivotPoint);
+            addHelpers()
 
-        // Add all sail parts to the group
-        const sailParts = [
-            boat.children[1].children[4].children[0].children[0],
-            boat.children[1].children[2].children[1],
-            boat.children[1].children[2].children[0],
-            boat.children[1].children[0].children[9],
-        ];
-
-        sailParts.forEach(part => {
-            // Remove the part from its current parent
-            part.parent.remove(part);
-            // Add the part to the sail group
-            sailGroup.add(part);
-
-            // Set material properties
-            if (part.material) {
-                part.material.side = THREE.DoubleSide;
-            }
-        });
-
-        // Parent the sail group to the boom
-        boom.add(sailGroup);
-
-
-        boat.rotation.x = THREE.MathUtils.degToRad(-90);
-
-        scene.add(boat);
-        addHelpers();
-    }
-);
-
-function rotateSail(angle) {
-    if (sailGroup) {
-        sailGroup.rotation.z += angle;
-        // Update helpers
-        axesHelper1.position.copy(pivotPoint);
-        pivotHelper.position.copy(pivotPoint);  // Changed from z to y axis
-    }
+            animate();
+        }
+    );
 }
 
-function addHelpers() {
-    // Axes helper
-    axesHelper1 = new THREE.AxesHelper(5);
-    axesHelper1.position.copy(pivotPoint);
-    scene.add(axesHelper1);
 
-    // Pivot point helper
-    const geometry = new THREE.SphereGeometry(0.1);
-    const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-    pivotHelper = new THREE.Mesh(geometry, material);
-    pivotHelper.position.copy(pivotPoint);
-    // scene.add(pivotHelper);
-    axesHelper1.scale.set(1000, 1000, 1000); // Make the axes smaller
-    pivotHelper.scale.set(1000, 1000, 1000);
-}
-function onKeyDown(event) {
-    switch (event.key) {
-        case 'ArrowLeft':
-            rotateSail(-0.1);
-            break;
-        case 'ArrowRight':
-            rotateSail(0.1);
-            break;
-    }
-}
+loadModel()
+
 document.addEventListener('keydown', onKeyDown);
 // Water
 
@@ -275,10 +216,7 @@ let control = new OrbitControls(camera, renderer.domElement);
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
-    if (axesHelper1 && pivotHelper && boat) {
-        axesHelper1.quaternion.copy(boat.quaternion);
-        pivotHelper.quaternion.copy(boat.quaternion);
-    }
+
     // Update wind velocity vector
     // const windVelocity = new THREE.Vector3(
     //     params.windSpeed * Math.cos(params.windDirection),
